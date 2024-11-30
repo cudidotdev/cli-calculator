@@ -1,18 +1,13 @@
+// Formats a floating point number and removes unnecessary decimal places
 pub fn format_and_trim(input: f64) -> String {
-    // Format the input to 10 decimal places and remove trailing zeros
+    // Steps:
+    // 1. Format number to 10 decimal places
+    // 2. Remove trailing zeros (e.g., 1.2300 -> 1.23)
+    // 3. Remove decimal point if no decimals remain (e.g., 1. -> 1)
     let formatted_input = format!("{input:.10}")
         .trim_end_matches('0')
         .trim_end_matches('.')
         .to_owned();
 
     formatted_input
-}
-
-pub fn add_explicit_sign(input: String) -> String {
-    // Ensure it has an explicit sign
-    if !input.starts_with('-') {
-        return format!("+{input}");
-    }
-
-    input
 }

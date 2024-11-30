@@ -1,15 +1,13 @@
 use crate::utils::{
-    extractor::extract_regex_captures,
-    formatters::{add_explicit_sign, format_and_trim},
-    parser::parse_value,
+    extractor::extract_regex_captures, formatters::format_and_trim, parser::parse_value,
 };
-
 use regex::Regex;
-
 use thiserror::Error;
 
+// Type alias for evaluation functions
 pub type EvaluatorFn = fn(input: String) -> Result<String, EvaluationError>;
 
+// Custom error types for the calculator
 #[derive(Error, Debug, PartialEq)]
 pub enum EvaluationError {
     #[error("Error parsing token: {0}")]
@@ -19,48 +17,54 @@ pub enum EvaluationError {
     UnknownError,
 }
 
+// Main trait for implementing evaluators
+// Generic parameter N represents number of operands (1 for unary, 2 for binary operations)
 pub trait Evaluator<const N: usize> {
+    // Returns the regex pattern for matching this operation
     fn regex() -> &'static Regex;
 
-    fn parser(input: &str) -> Result<f64, EvaluationError> {
+    // Converts string input to f64. Can be overridden for custom parsing
+    fn parser(input: String) -> Result<f64, EvaluationError> {
         parse_value(input)
     }
 
+    // Extracts matched operation and its operands from the input string
     fn extractor(input: &str) -> Option<(usize, usize, [&str; N])> {
         extract_regex_captures::<N>(input, Self::regex())
     }
 
-    fn operator(operands: &[f64; N]) -> Result<f64, EvaluationError>;
+    // Performs the actual mathematical operation
+    fn operator(operands: [f64; N]) -> Result<f64, EvaluationError>;
 
+    // Formats the result. Can be overridden for custom formatting
     fn formatter(input: f64) -> String {
-        add_explicit_sign(format_and_trim(input))
+        format_and_trim(input)
     }
 
+    // Main evaluation function that processes the input string
     fn evalutate(input: String) -> Result<String, EvaluationError> {
-        // Extract the match and captures using the provided extraction function
-        let Some((start, end, operands)) = Self::extractor(&input) else {
-            return Ok(input.to_owned()); // No division found, return the input unchanged
+        // Try to find a matching operation in the input
+        let Some((start, end, captures)) = Self::extractor(&input) else {
+            return Ok(input.to_owned()); // No match found, return unchanged
         };
 
-        // parse vector of extracted operands into boxed floats
-        let boxed_operands: Box<[f64; N]> = operands
-            .into_iter()
-            .map(|e| Self::parser(e))
-            .collect::<Result<Vec<_>, _>>()
-            // unwrapped since this won't error
-            // the operands are of length N and
-            // the box is of length N
-            .map(|vec| vec.try_into().unwrap())?;
+        // Convert captured strings to numbers
+        let mut operands = [0.0; N];
+        for (i, capture) in captures.into_iter().enumerate() {
+            operands[i] = Self::parser(capture.into())?
+        }
 
-        // Parse the extracted numbers and perform the division
-        let result = Self::operator(&boxed_operands.map(|s| s))?;
+        // Perform the operation
+        let result = Self::operator(operands)?;
 
+        // Format the result
         let formatted_result = Self::formatter(result);
 
-        // Replace the matched part in the input with the formatted result
+        // Replace the matched operation with its result in the input string
         let mut modified_input = input.to_owned();
         modified_input.replace_range(start..end, &formatted_result);
 
+        // Recursively evaluate remaining operations
         Self::evalutate(modified_input)
     }
 }
