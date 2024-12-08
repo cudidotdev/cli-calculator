@@ -5,7 +5,7 @@ use regex::Regex;
 use thiserror::Error;
 
 // Type alias for evaluation functions
-pub type EvaluatorFn = fn(input: String) -> Result<String, EvaluationError>;
+pub type EvaluatorFn = fn(String) -> Result<String, EvaluationError>;
 
 // Custom error types for the calculator
 #[derive(Error, Debug, PartialEq)]
