@@ -1,13 +1,13 @@
 mod calculator;
 mod evaluator;
+mod regex;
 mod utils;
 
 pub use crate::calculator::Calculator;
 pub use crate::evaluator::{EvaluationError, Evaluator, EvaluatorFn};
-use regex::Regex;
-use std::sync::OnceLock; // Thread-safe lazy initialization for static values
+use crate::regex::{ADDITION, DIVISION, EXPONENTIAL, MULTIPLICATION, PARENTHESIS, SUBTRACTION};
 
-use format as f; // Alias for format macro
+use ::regex::Regex;
 
 // Main calculator implementation
 pub struct Calculate;
@@ -28,23 +28,8 @@ impl Calculator for Calculate {
     }
 }
 
-// Regular expression pattern for matching numbers, including:
-// - Optional sign (+ or -)
-// - Integer or decimal numbers
-// - Scientific notation (e.g., 1.23e-4)
-// - Special values (inf, NaN)
-const NUMERIC_VALUE: &'static str = r"(?:-|\+)?(?:\d*\.?\d+(?:e(?:-|\+)?\d+)?|inf|NaN)";
-
-// Static regex patterns initialized lazily using OnceLock
-static PARENTHESIS: OnceLock<Regex> = OnceLock::new();
-static EXPONENTIAL: OnceLock<Regex> = OnceLock::new();
-static MULTIPLICATION: OnceLock<Regex> = OnceLock::new();
-static DIVISION: OnceLock<Regex> = OnceLock::new();
-static ADDITION: OnceLock<Regex> = OnceLock::new();
-static SUBTRACTION: OnceLock<Regex> = OnceLock::new();
-
 // Special evaluator for handling parenthesized expressions
-struct Parenthesis;
+pub struct Parenthesis;
 
 impl Calculator for Parenthesis {
     // Defines the order of operations (PEMDAS)
@@ -64,8 +49,7 @@ impl Calculator for Parenthesis {
 impl Evaluator<1> for Parenthesis {
     // Takes 1 parameter (the expression inside parentheses)
     fn regex() -> &'static Regex {
-        // Matches any expression inside parentheses that doesn't contain nested parentheses
-        PARENTHESIS.get_or_init(|| Regex::new(&f!(r"\s*\(([^()]+)\)\s*")).unwrap())
+        &PARENTHESIS
     }
 
     // Parses the expression inside parentheses by recursively calculating it
@@ -80,13 +64,11 @@ impl Evaluator<1> for Parenthesis {
 }
 
 // Exponential (power) implementation
-struct Exponential;
+pub struct Exponential;
 
 impl Evaluator<2> for Exponential {
     fn regex() -> &'static Regex {
-        EXPONENTIAL.get_or_init(|| {
-            Regex::new(&f!(r"\s*({NUMERIC_VALUE})\s*\^\s*({NUMERIC_VALUE})\s*")).unwrap()
-        })
+        &EXPONENTIAL
     }
 
     fn operator(operands: [f64; 2]) -> Result<f64, EvaluationError> {
@@ -95,13 +77,11 @@ impl Evaluator<2> for Exponential {
 }
 
 // Division implementation
-struct Division;
+pub struct Division;
 
 impl Evaluator<2> for Division {
     fn regex() -> &'static Regex {
-        DIVISION.get_or_init(|| {
-            Regex::new(&f!(r"\s*({NUMERIC_VALUE})\s*\/\s*({NUMERIC_VALUE})\s*")).unwrap()
-        })
+        &DIVISION
     }
 
     fn operator(operands: [f64; 2]) -> Result<f64, EvaluationError> {
@@ -110,13 +90,11 @@ impl Evaluator<2> for Division {
 }
 
 // Multiplication implementation
-struct Multiplication;
+pub struct Multiplication;
 
 impl Evaluator<2> for Multiplication {
     fn regex() -> &'static Regex {
-        MULTIPLICATION.get_or_init(|| {
-            Regex::new(&f!(r"\s*({NUMERIC_VALUE})\s*\*\s*({NUMERIC_VALUE})\s*")).unwrap()
-        })
+        &MULTIPLICATION
     }
 
     fn operator(operands: [f64; 2]) -> Result<f64, EvaluationError> {
@@ -125,13 +103,11 @@ impl Evaluator<2> for Multiplication {
 }
 
 // Similar structure for Subtraction
-struct Subtraction;
+pub struct Subtraction;
 
 impl Evaluator<2> for Subtraction {
     fn regex() -> &'static Regex {
-        SUBTRACTION.get_or_init(|| {
-            Regex::new(&f!(r"\s*({NUMERIC_VALUE})\s*-\s*({NUMERIC_VALUE})\s*")).unwrap()
-        })
+        &SUBTRACTION
     }
 
     fn operator(operands: [f64; 2]) -> Result<f64, EvaluationError> {
@@ -140,15 +116,12 @@ impl Evaluator<2> for Subtraction {
 }
 
 // Implementation for each arithmetic operation
-struct Addition;
+pub struct Addition;
 
 impl Evaluator<2> for Addition {
     // Generic parameter 2 indicates binary operation
     fn regex() -> &'static Regex {
-        // Initializes regex for matching addition operations: number + number
-        ADDITION.get_or_init(|| {
-            Regex::new(&f!(r"\s*({NUMERIC_VALUE})\s*\+\s*({NUMERIC_VALUE})\s*")).unwrap()
-        })
+        &ADDITION
     }
 
     // Performs the actual addition operation
