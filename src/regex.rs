@@ -15,25 +15,25 @@ pub static PARENTHESIS: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(&f!(r"\s*\(([^()]+)\)\s*")).unwrap());
 
 pub static EXPONENTIAL: LazyLock<Regex> =
-    // Initializes regex for matching addition operations: number ^ number
+    // Initializes regex for matching exponential operations: number ^ number
     LazyLock::new(|| {
         Regex::new(&f!(r"\s*({NUMERIC_VALUE})\s*\^\s*({NUMERIC_VALUE})\s*")).unwrap()
     });
 
 pub static DIVISION: LazyLock<Regex> =
-    // Initializes regex for matching addition operations: number / number
+    // Initializes regex for matching division operations: number / number
     LazyLock::new(|| {
         Regex::new(&f!(r"\s*({NUMERIC_VALUE})\s*\/\s*({NUMERIC_VALUE})\s*")).unwrap()
     });
 
 pub static MULTIPLICATION: LazyLock<Regex> =
-    // Initializes regex for matching addition operations: number * number
+    // Initializes regex for matching multiplication operations: number * number
     LazyLock::new(|| {
         Regex::new(&f!(r"\s*({NUMERIC_VALUE})\s*\*\s*({NUMERIC_VALUE})\s*")).unwrap()
     });
 
 pub static SUBTRACTION: LazyLock<Regex> =
-    // Initializes regex for matching addition operations: number - number
+    // Initializes regex for matching subtraction operations: number - number
     LazyLock::new(|| {
         Regex::new(&f!(r"\s*({NUMERIC_VALUE})\s*-\s*({NUMERIC_VALUE})\s*")).unwrap()
     });
