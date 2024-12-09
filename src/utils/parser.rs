@@ -4,7 +4,7 @@ use crate::EvaluationError;
 pub fn parse_value(input: String) -> Result<f64, EvaluationError> {
     // Attempt to parse string as f64
     // If parsing fails, wrap the original input string in a ParseError
-    Ok(input
+    input
         .parse::<f64>()
-        .map_err(|_| EvaluationError::ParseError(input))?)
+        .map_err(|_| EvaluationError::ParseError(input))
 }
