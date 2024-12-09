@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::{
     evaluator::{EvaluationError, EvaluatorFn},
     utils::parser::parse_value,
@@ -23,5 +25,45 @@ pub trait Calculator {
 
         // Convert final string result to f64
         Self::parser(result)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct MockCalculator;
+
+    impl Calculator for MockCalculator {
+        fn evaluators() -> Vec<EvaluatorFn> {
+            vec![mock_fn_a, mock_fn_b, mock_fn_c]
+        }
+
+        fn parser(input: String) -> Result<f64, EvaluationError> {
+            if input.ends_with("abc") {
+                Ok(1.0)
+            } else {
+                Err(EvaluationError::UnknownError)
+            }
+        }
+    }
+
+    fn mock_fn_a(input: String) -> Result<String, EvaluationError> {
+        Ok(input + "a")
+    }
+
+    fn mock_fn_b(input: String) -> Result<String, EvaluationError> {
+        Ok(input + "b")
+    }
+
+    fn mock_fn_c(input: String) -> Result<String, EvaluationError> {
+        Ok(input + "c")
+    }
+
+    #[test]
+    fn test_calculate_method() -> Result<(), EvaluationError> {
+        assert_eq!(MockCalculator::calculate("somestring".into())?, 1.0);
+
+        Ok(())
     }
 }
