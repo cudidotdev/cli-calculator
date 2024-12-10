@@ -68,3 +68,52 @@ pub trait Evaluator<const N: usize> {
         Self::evalutate(modified_input)
     }
 }
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    struct MockAdditionEvaluator;
+
+    impl Evaluator<2> for MockAdditionEvaluator {
+        fn regex() -> &'static Regex {
+            unreachable!()
+        }
+
+        fn parser(input: String) -> Result<f64, EvaluationError> {
+            match input.as_str() {
+                "2" => Ok(2.0),
+                "3" => Ok(3.0),
+                "4" => Ok(4.0),
+                _ => Err(EvaluationError::ParseError(input)),
+            }
+        }
+
+        fn formatter(input: f64) -> String {
+            format!("{}", input)
+        }
+
+        fn operator(operands: [f64; 2]) -> Result<f64, EvaluationError> {
+            Ok(operands[0] + operands[1])
+        }
+
+        fn extractor(input: &str) -> Option<(usize, usize, [&str; 2])> {
+            match input {
+                "2 + 2 + 3" => Some((0, 5, ["2", "2"])),
+                "4 + 3" => Some((0, 5, ["4", "3"])),
+                _ => None,
+            }
+        }
+    }
+
+    #[test]
+    fn test_evaluate_method() -> Result<(), EvaluationError> {
+        assert_eq!(
+            MockAdditionEvaluator::evalutate("2 + 2 + 3".to_string())?,
+            "7".to_string()
+        );
+
+        Ok(())
+    }
+}
