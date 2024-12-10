@@ -10,10 +10,10 @@ pub fn extract_regex_captures<'a, const N: usize>(
     let captures = pattern.captures(input)?;
 
     // Get the start and end positions of the entire match
-    let (start, end) = if let Some(full_match) = captures.get(0) {
+    let (start, end) = {
+        // the first capture is the entire match
+        let full_match = captures.get(0)?;
         (full_match.start(), full_match.end())
-    } else {
-        return None;
     };
 
     // Extract exactly N capture groups into an array
